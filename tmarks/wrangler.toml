@@ -19,11 +19,11 @@ database_id = "bdfa6639-e25d-4698-ad13-a4f95b8c4aa7"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
-id = "请替换为实际的KV_ID"  # 需要先创建KV命名空间
+id = "e0f338978b644876ba26910ec547daee"  # 需要先创建KV命名空间
 
 [[kv_namespaces]]
 binding = "PUBLIC_SHARE_KV"
-id = "请替换为实际的KV_ID"  # 需要先创建KV命名空间
+id = "581d130ccef948d99db96ae246b3c810"  # 需要先创建KV命名空间
 
 # Environment variables
 # ⚠️ 安全警告: 敏感信息不应该提交到Git仓库!
