@@ -212,12 +212,13 @@ export function SortSelector({ value, onChange, className = '' }: SortSelectorPr
             text-sm font-medium text-foreground
             transition-all duration-200 ease-out
             hover:border-primary/30
-            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+            focus:outline-none
             shadow-sm hover:shadow-md
             ${isOpen ? 'border-primary/50 shadow-md' : ''}
           `}
           style={{
             backgroundColor: isOpen ? 'var(--muted)' : 'var(--card)',
+            outline: 'none'
           }}
           aria-expanded={isOpen}
           aria-haspopup="listbox"

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import type { Bookmark } from '@/lib/types'
 import { useRecordClick } from '@/hooks/useBookmarks'
 
@@ -19,20 +19,110 @@ export function BookmarkTitleView({
   selectedIds = [],
   onToggleSelect,
 }: BookmarkTitleViewProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [columns, setColumns] = useState(1)
+
+  // 动态计算列数
+  useEffect(() => {
+    const updateColumns = () => {
+      if (!containerRef.current) return
+
+      const containerWidth = containerRef.current.offsetWidth
+      // 每列最小宽度240px，间距10px
+      const minColumnWidth = 240
+      const gap = 10
+
+      // 计算可以容纳的列数
+      let cols = 1
+      for (let i = 1; i <= 4; i++) {
+        const totalWidth = i * minColumnWidth + (i - 1) * gap
+        if (containerWidth >= totalWidth) {
+          cols = i
+        } else {
+          break
+        }
+      }
+
+      setColumns(cols)
+    }
+
+    // 初始计算
+    updateColumns()
+
+    // 监听窗口大小变化
+    const resizeObserver = new ResizeObserver(updateColumns)
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current)
+    }
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [])
+
+  // 按置顶状态分组书签
+  const pinnedBookmarks = bookmarks.filter(b => b.is_pinned)
+  const unpinnedBookmarks = bookmarks.filter(b => !b.is_pinned)
+
+  // 动态分列：将书签分配到各列
+  const columnedBookmarks = (() => {
+    // 创建 N 个空列数组
+    const cols: Bookmark[][] = Array.from({ length: columns }, () => [])
+    
+    // 1. 先将置顶书签按行分散到各列顶部
+    for (let i = 0; i < pinnedBookmarks.length; i++) {
+      const colIndex = i % columns
+      const col = cols[colIndex]
+      const bookmark = pinnedBookmarks[i]
+      if (col && bookmark) {
+        col.push(bookmark)
+      }
+    }
+    
+    // 2. 再将未置顶书签按列顺序分配
+    for (let i = 0; i < unpinnedBookmarks.length; i++) {
+      const colIndex = i % columns
+      const col = cols[colIndex]
+      const bookmark = unpinnedBookmarks[i]
+      if (col && bookmark) {
+        col.push(bookmark)
+      }
+    }
+    
+    return cols
+  })()
+
   return (
-    <div className="columns-1 sm:columns-2 xl:columns-4 gap-2.5 sm:gap-3">
-      {bookmarks.map((bookmark) => (
-        <div key={bookmark.id} className="break-inside-avoid mb-2.5 sm:mb-3">
-          <TitleOnlyCard
-            bookmark={bookmark}
-            onEdit={onEdit ? () => onEdit(bookmark) : undefined}
-            readOnly={readOnly}
-            batchMode={batchMode}
-            isSelected={selectedIds.includes(bookmark.id)}
-            onToggleSelect={onToggleSelect}
-          />
+    <div ref={containerRef} className="w-full">
+      {/* CSS Grid 布局 - 并排显示各列 */}
+      {columnedBookmarks.length > 0 && (
+        <div
+          className="w-full"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${columns}, 1fr)`,
+            gap: '0.625rem',
+            outline: 'none'
+          } as React.CSSProperties}
+        >
+          {columnedBookmarks.map((col, colIndex) => (
+            <div key={`col-${colIndex}`} style={{ outline: 'none' }}>
+              {col.map((bookmark) => (
+                <div key={bookmark.id} className="mb-2.5 sm:mb-3" style={{ outline: 'none' }}>
+                  <TitleOnlyCard
+                    bookmark={bookmark}
+                    onEdit={onEdit ? () => onEdit(bookmark) : undefined}
+                    readOnly={readOnly}
+                    batchMode={batchMode}
+                    isSelected={selectedIds.includes(bookmark.id)}
+                    onToggleSelect={onToggleSelect}
+                  />
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   )
 }
